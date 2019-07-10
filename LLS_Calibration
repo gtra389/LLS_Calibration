@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+#
+# Available device:
+# Manufacturer:
+# Product number:
+# Serial communication protocol: RS485
+# Purpose:
+
+# Including
+from statistics import median
+import minimalmodbus
+import time
+import numpy as np
+from scipy import stats
+
+# Definition of variable
+ModReading = []
+TrueValue  = []
+minimalmodbus.BAUDRATE = 19200
+slaveAddr = 1
+# devName = '/dev/ttyUSB0' # RPI    format
+comName = 'COM37'        # Window format
+
+LLS = minimalmodbus.Instrument(comName, slaveAddr) 
+while True:
+    query = input('Would you like to do zero calibration?(Y/N)')
+    Ans = query[0].upper()
+    if query == '' or not Ans in ['Y']:
+        print('No zero calivration.')  
+        break
+    else:
+        print('Start the zero calivration.')
+        samplingList = []
+        countNum  = 0
+        sampleNum = 20
+        while (countNum <= sampleNum):
+            ReadingValue = LLS.read_registers(0,2,4)
+            power = len(str(ReadingValue[1]))
+            ArrangeValue = ReadingValue[0] + ReadingValue[1]/(10^power)
+            samplingList.append(ArrangeValue)
+            countNum += 1
+            time.sleep(1) # Wait for 1 second
+        medianVal = median(samplingList)
+        print('the zero offset value is ', medianVal)
+        ModReading.append(medianVal)
+        TrueValue.append(0) # Unit in m-H2O
+        break
+
+# Detect the free water surface
+WaterDetectTHR = 707.65 * 0.05 # the unit of 707.65 is Modbus reading value/m-H20
+while True:
+    query = input('Would you like to detect the free water surface?(Y/N)')
+    Ans = query[0].upper()
+    if query == '' or not Ans in ['Y']:
+        print('No detection.') 
+        break
+    else:
+        print('Start detection.')
+    # Register address / number of registers / function code)
+        while True:
+            ReadingValue = LLS.read_registers(0,2,4)
+            power = len(str(ReadingValue[1]))
+            ArrangeValue = ReadingValue[0] + ReadingValue[1]/(10^power)
+                if ((abs(ModReading[0] - ArrangeValue)) > WaterDetectTHR) & (ArrangeValue != 0) :
+                    print('The free water level is detected.')
+                    print('Current value: ', ArrangeValue)        
+                    break
+            time.sleep(1) # Wait for 1 second
+        break    
+
+# Record Modbus reading values and measurements
+
+try:
+    while True:
+        ReadingValue = LLS.read_registers(0,2,4)
+        power = len(str(ReadingValue[1]))
+        ArrangeValue = ReadingValue[0] + ReadingValue[1]/(10^power)
+        ModReading.append(ReadingValue)
+        EnterVal = input('Please enter the true value.')
+        TrueValue.append(EnterVal)
+        ModReading_Arr = np.ravel(ModReading)
+        TrueValue_Arr = np.ravel(TrueValue)        
+        slope, intercept, r_value, p_value, std_err = stats.linregress(TrueValue_Arr,ModReading_Arr)
+        print('r-squared:', round(r_value**2,3))               
+        
+except KeyboardInterrupt:
+    print('Finish the calibration.')
