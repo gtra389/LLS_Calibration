@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Available device:
+# Available device: Liquid level sensor
 # Manufacturer:
 # Product number:
 # Serial communication protocol: RS485
@@ -69,7 +69,6 @@ while True:
         break    
 
 # Record Modbus reading values and measurements
-
 try:
     while True:
         ReadingValue = LLS.read_registers(0,2,4)
