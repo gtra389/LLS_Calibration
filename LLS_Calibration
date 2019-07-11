@@ -117,7 +117,19 @@ try:
             print('R-squared:', round(r_value**2,3))
             print('Slope:', round(slope,3))
             print('Intercept:', round(intercept,3))
+            
             print('---------------------------')
+            
+            fid = open('calibration_log.txt','w')
+            fid.write('---Raw data---\n')
+            fid.write(str(ModReading_Arr) + '\n')
+            fid.write(str(TrueValue_Arr) + '\n')
+            fid.write('---Report---\n')
+            fid.write('Slope = ' + str(round(slope,5)) + '\n')
+            fid.write('Intercept = ' + str(round(intercept,5)) + '\n')
+            fid.write('R-squared = ' + str(round(r_value**2,5)) + '\n')
+            fid.close()
+            
             input('Press Enter to continue.')
             minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True
         
@@ -126,3 +138,4 @@ except KeyboardInterrupt:
     print('---------------------------')
     print('Finish the calibration.')
     print('---------------------------')
+    
