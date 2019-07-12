@@ -54,7 +54,7 @@ while True:
         break
 
 # Detect the free water surface
-WaterDetectTHR = 707.65 * 0.05 # the unit of 707.65 is Modbus reading value/m-H20
+WaterDetectTHR = 707.65 * 0.1 # the unit of 707.65 is Modbus reading value/m-H20
 while True:
     query = input('Would you like to detect the free water surface?(Y/N)')
     Ans = query[0].upper()
